@@ -127,10 +127,13 @@ def decrypt_location_response_locations(device_update_protobuf):
     print("-" * 40)
     print("[DecryptLocations] Decrypted Locations:")
 
+    global LAST_FIXES
     if not location_time_array:
         print("No locations found.")
-        return
+        LAST_FIXES = []
+        return []
 
+    fixes = []
     for loc in location_time_array:
 
         if loc.status == Common_pb2.Status.SEMANTIC:
@@ -148,13 +151,20 @@ def decrypt_location_response_locations(device_update_protobuf):
             print(f"Longitude: {longitude}")
             print(f"Altitude: {altitude}")
             print(f"Google Maps Link: {create_google_maps_link(latitude, longitude)}")
-            
+
+            fixes.append({
+                "lat": latitude, "lon": longitude, "alt": altitude,
+                "time": loc.time, "accuracy": loc.accuracy,
+                "status": int(loc.status), "own": bool(loc.is_own_report),
+            })
+
         print(f"Time: {datetime.datetime.fromtimestamp(loc.time).strftime('%Y-%m-%d %H:%M:%S')}")
         print(f"Status: {loc.status}")
         print(f"Is Own Report: {loc.is_own_report}")
         print("-" * 40)
 
-    pass
+    LAST_FIXES = fixes
+    return fixes
 
 
 if __name__ == '__main__':
