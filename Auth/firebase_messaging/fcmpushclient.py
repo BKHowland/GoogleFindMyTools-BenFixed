@@ -402,8 +402,15 @@ class FcmPushClient:  # pylint:disable=too-many-instance-attributes
         salt_str: str,
         raw_data: bytes,
     ) -> bytes:
-        crypto_key = urlsafe_b64decode(crypto_key_str.encode("ascii"))
-        salt = urlsafe_b64decode(salt_str.encode("ascii"))
+        # Crypto-Key can carry extra params, e.g. "<dh>; p256ecdsa=<vapid key>".
+        # Only the first value is the DH public key.
+        # print("DEBUG crypto_key_str=%r salt_str=%r" % (crypto_key_str, salt_str))
+        crypto_key_str = crypto_key_str.split(";")[0].strip()
+        if crypto_key_str.startswith("dh="):
+            crypto_key_str = crypto_key_str[3:]
+        # print("DEBUG crypto_key_str=%r salt_str=%r" % (crypto_key_str, salt_str))
+        crypto_key = urlsafe_b64decode(crypto_key_str.encode("ascii") + b"========")
+        salt = urlsafe_b64decode(salt_str.encode("ascii") + b"========")
         der_data_str = credentials["keys"]["private"]
         der_data = urlsafe_b64decode(der_data_str.encode("ascii") + b"========")
         secret_str = credentials["keys"]["secret"]
